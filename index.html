@@ -1,0 +1,156 @@
+﻿<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>留給妳</title>
+<style>
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html,body{ height:100%; background:#000; font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; overflow: hidden; }
+    
+    .container{ height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
+    
+    .page{ 
+        height: 100vh; width: 100%; scroll-snap-align: start; 
+        position: relative; overflow: hidden; 
+        background: #000; 
+        display: flex; align-items: center; justify-content: center;
+    }
+    
+    .page img{ 
+        position: absolute; width: 100%; height: 100%; object-fit: cover; 
+        opacity: 0; transition: opacity 2.5s ease-in-out, transform 12s linear;
+        transform: scale(1.05);
+    }
+    .page.active img{ opacity: 0.6; transform: scale(1.2); }
+
+    .text-content{
+        max-width: 85%; text-align: center; z-index: 1;
+        opacity: 0; transition: opacity 2s ease-in-out 0.8s;
+    }
+    .page.active .text-content { opacity: 1; }
+
+    .text-content p{ 
+        color: rgba(255, 255, 255, 0.85); 
+        font-size: 18px; line-height: 2.8; 
+        letter-spacing: 0.18em; font-weight: 300; 
+        text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+        margin-bottom: 12px;
+    }
+    
+    .highlight{ 
+        color: #d4af37 !important; font-size: 20px !important; 
+        font-weight: 600 !important; letter-spacing: 0.3em !important; 
+        margin-top: 30px; display: block;
+    }
+    
+    .audio-tip { 
+        font-size: 12px !important; color: rgba(212, 175, 55, 0.4) !important; 
+        margin-top: 40px; font-weight: 200; display: block;
+    }
+
+    #music {
+        position: fixed; top: 35px; right: 25px; z-index: 1000;
+        font-size: 28px; color: #d4af37; cursor: pointer;
+        transition: all 1s ease; opacity: 0.4;
+    }
+    @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+    #music.playing { animation: rotate 6s linear infinite; opacity: 1; transform: translateX(-15px); }
+
+    .exit {
+        position: fixed; bottom: 45px; left: 35px; z-index: 1000;
+        color: #d4af37; font-size: 16px; text-decoration: none;
+        letter-spacing: 2px; font-weight: 300; opacity: 0;
+        transition: opacity 2s ease-in-out;
+    }
+    .exit.show { opacity: 0.7; }
+</style>
+</head>
+<body>
+
+<audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
+<div id="music">♫</div>
+<a href="https://abm-mj.pages.dev" target="_blank" class="exit" id="exit-btn">忍住</a>
+
+<div class="container" id="main-container"></div>
+
+<script>
+const data = [
+    { text: ["古刹千年，見過多少人來去","唯獨妳站在這裡","讓我覺得，值得駐足","不是因為這裡有多美","是因為妳在","<span class='audio-tip'>點擊屏幕開啟聲音</span>"], img: "p1.jpg" },
+    { text: ["這座城市我走了很久","直到妳來，才覺得有人一起看","才算真的看見了","以前一個人走過這裡，只是路過","現在想帶妳重新走一遍"], img: "p2.jpg" },
+    { text: ["錦鯉不問來路，只管游","我也是，只管靠近妳","它們不知道終點在哪","我知道","終點是妳在的地方"], img: "p3.jpg" },
+    { text: ["水往低處走，我往妳那裡走","都是本能，都不需要理由","遇見妳之前","我也在找方向"], img: "p4.jpg" },
+    { text: ["451米，夠高了","但站在這裡，我想的還是妳在哪","俯瞰整座城市","卻只想看見妳"], img: "p5.jpg" },
+    { text: ["人來人往，妳一個人站在那裡","從那一刻起","那個位置就只屬於妳了","千萬人裡，我一眼就看見妳"], img: "p6.jpg" },
+    { text: ["淨手，是為了虔誠地許願","在這裡許的願，我替妳守著","妳只管往前走","我在"], img: "p7.jpg" }
+];
+
+const container = document.getElementById("main-container");
+const exitBtn = document.getElementById("exit-btn");
+
+data.forEach((item, i) => {
+    // 文本頁
+    let textPage = document.createElement('section');
+    textPage.className = 'page';
+    let textHtml = `<div class="text-content">`;
+    item.text.forEach((line, j) => {
+        if(line.includes('audio-tip')) textHtml += line;
+        else textHtml += j === item.text.length-1 ? `<p class="highlight">${line}</p>` : `<p>${line}</p>`;
+    });
+    textHtml += `</div>`;
+    textPage.innerHTML = textHtml;
+    container.appendChild(textPage);
+
+    // 圖片頁
+    let imgPage = document.createElement('section');
+    imgPage.className = 'page';
+    imgPage.innerHTML = `<img src="${item.img}" loading="${i<1?'eager':'lazy'}">`;
+    container.appendChild(imgPage);
+});
+
+setTimeout(() => container.children[0].classList.add('active'), 100);
+
+let timer = null;
+
+container.onscroll = () => {
+    const scrollPos = container.scrollTop;
+    const height = window.innerHeight;
+    const activeIndex = Math.round(scrollPos / height);
+    
+    Array.from(container.children).forEach((p, idx) => {
+        if(idx === activeIndex) p.classList.add('active');
+        else p.classList.remove('active');
+    });
+
+    // 忍住按鈕邏輯：從第7頁（即第4組文案）開始才具備顯示條件
+    exitBtn.classList.remove('show');
+    clearTimeout(timer);
+
+    if(activeIndex >= 7) {
+        timer = setTimeout(() => {
+            exitBtn.classList.add('show');
+        }, 1500); 
+    }
+};
+
+const audio = document.getElementById("bgm");
+const btn = document.getElementById("music");
+
+const startAudio = () => {
+    if(audio.paused) {
+        audio.play().catch(()=>{});
+        btn.classList.add('playing');
+        const tip = document.querySelector('.audio-tip');
+        if(tip) tip.style.opacity = "0";
+    }
+};
+
+btn.onclick = (e) => {
+    e.stopPropagation();
+    if(audio.paused) startAudio();
+    else { audio.pause(); btn.classList.remove('playing'); }
+};
+document.addEventListener("click", startAudio, {once: true});
+</script>
+</body>
+</html>
