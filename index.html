@@ -1,66 +1,136 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>留給妳</title>
 <style>
-    *{margin:0;padding:0;box-sizing:border-box;}
-    html,body{ height:100%; background:#000; font-family:-apple-system,"PingFang TC","Microsoft JhengHei",sans-serif; overflow: hidden; }
-    
-    .container{ height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory; -webkit-overflow-scrolling: touch; }
-    
-    .page{ 
-        height: 100vh; width: 100%; scroll-snap-align: start; 
-        position: relative; overflow: hidden; 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { 
+        height: 100%; 
         background: #000; 
-        display: flex; align-items: center; justify-content: center;
+        font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; 
+        overflow: hidden; 
     }
     
-    .page img{ 
-        position: absolute; width: 100%; height: 100%; object-fit: cover; 
-        opacity: 0; transition: opacity 2.5s ease-in-out, transform 12s linear;
-        transform: scale(1.05);
+    /* 滾動容器 */
+    .container { 
+        height: 100vh; 
+        overflow-y: auto; 
+        scroll-snap-type: y mandatory; 
+        -webkit-overflow-scrolling: touch; 
     }
-    .page.active img{ opacity: 0.6; transform: scale(1.2); }
+    
+    /* 每一頁的全屏容器 */
+    .page { 
+        height: 100vh; 
+        width: 100%; 
+        scroll-snap-align: start; 
+        position: relative; 
+        overflow: hidden; 
+        background: #000; 
+        display: flex; 
+        align-items: center; 
+        justify-content: center;
+    }
+    
+    /* 圖片基礎樣式 */
+    .page img { 
+        position: absolute; 
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+        opacity: 0; 
+        transition: opacity 2.5s ease-in-out, transform 12s linear;
+        transform: scale(1.05);
+        object-position: center;
+    }
 
-    .text-content{
-        max-width: 85%; text-align: center; z-index: 1;
-        opacity: 0; transition: opacity 2s ease-in-out 0.8s;
+    /* 激活狀態下的通用動畫：淡入 + 緩慢縮放 */
+    .page.active img { 
+        opacity: 0.6; 
+        transform: scale(1.15); 
+    }
+
+    /* ✅ 針對全景圖（第4個page）與晴空塔（第10個page）的特殊優化 */
+    /* 1. 取消放大動畫，防止建築被裁切顯示不全 */
+    /* 2. 靠頂部對齊，確保塔尖等關鍵視覺點完整 */
+    .container .page:nth-child(4) img,
+    .container .page:nth-child(10) img {
+        transform: scale(1) !important; 
+        object-position: top center; 
+    }
+    .container .page:nth-child(4).active img,
+    .container .page:nth-child(10).active img {
+        transform: scale(1) !important;
+    }
+
+    /* 文字內容容器 */
+    .text-content {
+        max-width: 85%; 
+        text-align: center; 
+        z-index: 1;
+        opacity: 0; 
+        transition: opacity 2s ease-in-out 0.8s;
     }
     .page.active .text-content { opacity: 1; }
 
-    .text-content p{ 
+    .text-content p { 
         color: rgba(255, 255, 255, 0.85); 
-        font-size: 18px; line-height: 2.8; 
-        letter-spacing: 0.18em; font-weight: 300; 
+        font-size: 18px; 
+        line-height: 2.8; 
+        letter-spacing: 0.18em; 
+        font-weight: 300; 
         text-shadow: 0 2px 10px rgba(0,0,0,0.8);
         margin-bottom: 12px;
     }
     
-    .highlight{ 
-        color: #d4af37 !important; font-size: 20px !important; 
-        font-weight: 600 !important; letter-spacing: 0.3em !important; 
-        margin-top: 30px; display: block;
+    /* 金色強調文字 */
+    .highlight { 
+        color: #d4af37 !important; 
+        font-size: 20px !important; 
+        font-weight: 600 !important; 
+        letter-spacing: 0.3em !important; 
+        margin-top: 30px; 
+        display: block;
     }
     
+    /* 音頻提示小字 */
     .audio-tip { 
-        font-size: 12px !important; color: rgba(212, 175, 55, 0.4) !important; 
-        margin-top: 40px; font-weight: 200; display: block;
+        font-size: 12px !important; 
+        color: rgba(212, 175, 55, 0.4) !important; 
+        margin-top: 40px; 
+        font-weight: 200; 
+        display: block;
     }
 
+    /* 🎵 金黃色線條音樂按鈕 */
     #music {
-        position: fixed; top: 35px; right: 25px; z-index: 1000;
-        font-size: 28px; color: #d4af37; cursor: pointer;
-        transition: all 1s ease; opacity: 0.4;
+        position: fixed; 
+        top: 35px; 
+        right: 25px; 
+        z-index: 1000;
+        font-size: 28px; 
+        color: #d4af37; 
+        cursor: pointer;
+        transition: all 1s ease; 
+        opacity: 0.4;
     }
     @keyframes rotate { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     #music.playing { animation: rotate 6s linear infinite; opacity: 1; transform: translateX(-15px); }
 
+    /* 忍住按鈕：初始隱藏，後半段浮現 */
     .exit {
-        position: fixed; bottom: 45px; left: 35px; z-index: 1000;
-        color: #d4af37; font-size: 16px; text-decoration: none;
-        letter-spacing: 2px; font-weight: 300; opacity: 0;
+        position: fixed; 
+        bottom: 45px; 
+        left: 35px; 
+        z-index: 1000;
+        color: #d4af37; 
+        font-size: 16px; 
+        text-decoration: none;
+        letter-spacing: 2px; 
+        font-weight: 300; 
+        opacity: 0;
         transition: opacity 2s ease-in-out;
     }
     .exit.show { opacity: 0.7; }
@@ -76,7 +146,7 @@
 
 <script>
 const data = [
-    { text: ["古刹千年，見過多少人來去","唯獨妳站在這裡","讓我覺得，值得駐足","不是因為這裡有多美","是因為妳在","<span class='audio-tip'>點擊屏幕開啟聲音</span>"], img: "p1.jpg" },
+    { text: ["古剎千年，見過多少人來去","唯獨妳站在這裡","讓我覺得，值得駐足","不是因為這裡有多美","是因為妳在","<span class='audio-tip'>點擊屏幕開啟聲音</span>"], img: "p1.jpg" },
     { text: ["這座城市我走了很久","直到妳來，才覺得有人一起看","才算真的看見了","以前一個人走過這裡，只是路過","現在想帶妳重新走一遍"], img: "p2.jpg" },
     { text: ["錦鯉不問來路，只管游","我也是，只管靠近妳","它們不知道終點在哪","我知道","終點是妳在的地方"], img: "p3.jpg" },
     { text: ["水往低處走，我往妳那裡走","都是本能，都不需要理由","遇見妳之前","我也在找方向"], img: "p4.jpg" },
@@ -88,8 +158,9 @@ const data = [
 const container = document.getElementById("main-container");
 const exitBtn = document.getElementById("exit-btn");
 
+// 動態構造 文本頁-圖片頁 交替結構
 data.forEach((item, i) => {
-    // 文本頁
+    // 1. 文本頁
     let textPage = document.createElement('section');
     textPage.className = 'page';
     let textHtml = `<div class="text-content">`;
@@ -101,13 +172,14 @@ data.forEach((item, i) => {
     textPage.innerHTML = textHtml;
     container.appendChild(textPage);
 
-    // 圖片頁
+    // 2. 圖片頁
     let imgPage = document.createElement('section');
     imgPage.className = 'page';
     imgPage.innerHTML = `<img src="${item.img}" loading="${i<1?'eager':'lazy'}">`;
     container.appendChild(imgPage);
 });
 
+// 初始化第一頁
 setTimeout(() => container.children[0].classList.add('active'), 100);
 
 let timer = null;
@@ -117,12 +189,13 @@ container.onscroll = () => {
     const height = window.innerHeight;
     const activeIndex = Math.round(scrollPos / height);
     
+    // 更新激活狀態
     Array.from(container.children).forEach((p, idx) => {
         if(idx === activeIndex) p.classList.add('active');
         else p.classList.remove('active');
     });
 
-    // 忍住按鈕邏輯：從第7頁（即第4組文案）開始才具備顯示條件
+    // 忍住按鈕邏輯：第7頁之後開始出現（約數據後半段）
     exitBtn.classList.remove('show');
     clearTimeout(timer);
 
