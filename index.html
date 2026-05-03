@@ -10,9 +10,18 @@
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
     html, body { height: 100%; background: #000; font-family: -apple-system, "PingFang TC", "Microsoft JhengHei", sans-serif; overflow: hidden; }
     
+    /* 啟動提示層 */
+    #overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: #000; z-index: 2000; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; transition: opacity 2.5s ease;
+    }
+    #overlay p { color: #d4af37; letter-spacing: 0.5em; font-weight: 300; opacity: 0.6; font-size: 15px; }
+    #overlay .hint { margin-top: 20px; font-size: 12px; color: rgba(255,255,255,0.3); letter-spacing: 0.2em; }
+
     .container { 
         height: 100vh; overflow-y: auto; scroll-snap-type: y mandatory; 
-        -webkit-overflow-scrolling: touch; contain: strict;
+        -webkit-overflow-scrolling: touch; contain: strict; opacity: 0; transition: opacity 3s ease;
     }
     
     .page { 
@@ -28,38 +37,24 @@
         transform: scale(1.02); object-position: center;
         will-change: opacity, transform;
     }
-
     .page.active img { opacity: 0.6; transform: scale(1.1); }
 
-    /* 文字電影感核心：慢速、模糊對焦、位移 */
+    /* 文字電影感 */
     .text-content { max-width: 80%; text-align: center; z-index: 1; }
-    
     .text-content p { 
-        color: rgba(255, 255, 255, 0.9); 
-        font-size: 17px; line-height: 2.8; letter-spacing: 0.22em; 
-        font-weight: 300; text-shadow: 0 2px 15px rgba(0,0,0,1); 
-        margin-bottom: 12px;
-        
-        /* 初始狀態：透明、模糊、下移 */
-        opacity: 0; 
-        filter: blur(8px);
-        transform: translateY(15px);
-        transition: 
-            opacity 2.8s cubic-bezier(0.4, 0, 0.2, 1), 
-            filter 2.5s cubic-bezier(0.4, 0, 0.2, 1), 
-            transform 3s cubic-bezier(0.22, 1, 0.36, 1);
+        color: rgba(255, 255, 255, 0.9); font-size: 17px; line-height: 2.8; letter-spacing: 0.22em; 
+        font-weight: 300; text-shadow: 0 2px 15px rgba(0,0,0,1); margin-bottom: 12px;
+        opacity: 0; filter: blur(8px); transform: translateY(15px);
+        transition: opacity 2.8s cubic-bezier(0.4, 0, 0.2, 1), filter 2.5s cubic-bezier(0.4, 0, 0.2, 1), transform 3s cubic-bezier(0.22, 1, 0.36, 1);
     }
-    
-    /* 激活狀態：文字逐行浮現 */
     .page.active .text-content p { opacity: 1; filter: blur(0px); transform: translateY(0); }
     
-    /* 設置逐行延遲，模擬思緒流淌 */
-    .page.active .text-content p:nth-child(1) { transition-delay: 0.2s; }
-    .page.active .text-content p:nth-child(2) { transition-delay: 0.8s; }
-    .page.active .text-content p:nth-child(3) { transition-delay: 1.4s; }
-    .page.active .text-content p:nth-child(4) { transition-delay: 2.0s; }
-    .page.active .text-content p:nth-child(5) { transition-delay: 2.6s; }
-    .page.active .text-content p:nth-child(6) { transition-delay: 3.2s; }
+    /* 逐行延遲 */
+    .page.active .text-content p:nth-child(1) { transition-delay: 0.3s; }
+    .page.active .text-content p:nth-child(2) { transition-delay: 0.9s; }
+    .page.active .text-content p:nth-child(3) { transition-delay: 1.5s; }
+    .page.active .text-content p:nth-child(4) { transition-delay: 2.1s; }
+    .page.active .text-content p:nth-child(5) { transition-delay: 2.7s; }
 
     .highlight { 
         color: #d4af37 !important; font-size: 19px !important; font-weight: 600 !important; 
@@ -67,19 +62,10 @@
         text-shadow: 0 0 25px rgba(212, 175, 55, 0.35) !important;
     }
 
-    /* 忍住按鈕：深呼吸感 */
-    @keyframes breathing {
-        0%, 100% { opacity: 0.05; filter: blur(2px); }
-        50% { opacity: 0.45; filter: blur(0px); }
-    }
-
-    .exit { 
-        position: fixed; bottom: 45px; left: 35px; z-index: 1000; 
-        color: #d4af37; font-size: 14px; text-decoration: none; 
-        letter-spacing: 4px; font-weight: 300; opacity: 0; 
-        pointer-events: none; transition: opacity 3.5s ease;
-    }
+    /* 按鈕與音樂 */
+    .exit { position: fixed; bottom: 45px; left: 35px; z-index: 1000; color: #d4af37; font-size: 14px; text-decoration: none; letter-spacing: 4px; opacity: 0; pointer-events: none; transition: opacity 3.5s ease; }
     .exit.show { animation: breathing 7s ease-in-out infinite; pointer-events: auto; }
+    @keyframes breathing { 0%, 100% { opacity: 0.05; filter: blur(2px); } 50% { opacity: 0.45; filter: blur(0px); } }
 
     #music { position: fixed; top: 35px; right: 25px; z-index: 1000; font-size: 26px; color: #d4af37; cursor: pointer; opacity: 0.3; transition: opacity 0.8s; }
     #music.playing { animation: rotate 12s linear infinite; opacity: 0.8; }
@@ -87,6 +73,11 @@
 </style>
 </head>
 <body>
+
+<div id="overlay">
+    <p>聽，這段時光</p>
+    <div class="hint">點擊開啟</div>
+</div>
 
 <audio id="bgm" src="bgm.mp3" loop preload="auto"></audio>
 <div id="music">♫</div>
@@ -119,82 +110,64 @@ const data = [
 ];
 
 const container = document.getElementById("main-container");
+const overlay = document.getElementById("overlay");
+const audio = document.getElementById("bgm");
+const musicBtn = document.getElementById("music");
 const exitBtn = document.getElementById("exit-btn");
 
+// 構建 DOM
 const fragment = document.createDocumentFragment();
 data.forEach((item, i) => {
-    let textPage = document.createElement('section');
-    textPage.className = 'page';
-    let textHtml = `<div class="text-content">`;
-    item.text.forEach((line, j) => {
-        textHtml += (j === item.text.length - 1) ? `<p class="highlight">${line}</p>` : `<p>${line}</p>`;
-    });
-    textHtml += `</div>`;
-    textPage.innerHTML = textHtml;
-    fragment.appendChild(textPage);
+    let tp = document.createElement('section');
+    tp.className = 'page';
+    let html = `<div class="text-content">`;
+    item.text.forEach((l, j) => html += (j === item.text.length-1) ? `<p class="highlight">${l}</p>` : `<p>${l}</p>`);
+    tp.innerHTML = html + `</div>`;
+    fragment.appendChild(tp);
 
-    let imgPage = document.createElement('section');
-    imgPage.className = 'page';
-    const priority = i === 0 ? 'high' : 'auto';
-    imgPage.innerHTML = `<img data-src="${item.img}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7" fetchpriority="${priority}">`;
-    fragment.appendChild(imgPage);
+    let ip = document.createElement('section');
+    ip.className = 'page';
+    ip.innerHTML = `<img data-src="${item.img}" src="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7">`;
+    fragment.appendChild(ip);
 });
 
-if (fragment.children.length > 39) {
-    fragment.removeChild(fragment.lastChild); 
-} else {
-    for(let k=fragment.children.length; k < 39; k++) {
-        fragment.appendChild(document.createElement('section')).className = 'page';
-    }
-}
+if (fragment.children.length > 39) fragment.removeChild(fragment.lastChild);
+else for(let k=fragment.children.length; k<39; k++) fragment.appendChild(document.createElement('section')).className='page';
 container.appendChild(fragment);
 
-const observerOptions = { threshold: 0.4 };
+// 啟動交互
+overlay.onclick = () => {
+    overlay.style.opacity = '0';
+    setTimeout(() => {
+        overlay.style.display = 'none';
+        container.style.opacity = '1';
+        audio.play().catch(()=>{});
+        musicBtn.classList.add('playing');
+        container.children[0].classList.add('active');
+    }, 2500);
+};
+
+// 觀察者
 const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            const target = entry.target;
-            target.classList.add('active');
-            const img = target.querySelector('img');
-            if (img && img.dataset.src) {
-                img.src = img.dataset.src;
-                delete img.dataset.src;
-            }
-            const index = Array.from(container.children).indexOf(target);
-            if (index >= container.children.length - 2) exitBtn.classList.add('show');
+    entries.forEach(e => {
+        if (e.isIntersecting) {
+            e.target.classList.add('active');
+            const img = e.target.querySelector('img');
+            if (img && img.dataset.src) { img.src = img.dataset.src; delete img.dataset.src; }
+            const idx = Array.from(container.children).indexOf(e.target);
+            if (idx >= container.children.length - 2) exitBtn.classList.add('show');
             else exitBtn.classList.remove('show');
-        } else {
-            entry.target.classList.remove('active');
-        }
+        } else e.target.classList.remove('active');
     });
-}, observerOptions);
+}, { threshold: 0.4 });
 
-Array.from(container.children).forEach(page => observer.observe(page));
+Array.from(container.children).forEach(p => observer.observe(p));
 
-const idlePreload = () => {
-    if ('requestIdleCallback' in window) {
-        requestIdleCallback(() => {
-            data.slice(2).forEach(item => {
-                const link = document.createElement('link');
-                link.rel = 'preload'; link.as = 'image'; link.href = item.img;
-                document.head.appendChild(link);
-            });
-        });
-    }
-};
-
-const audio = document.getElementById("bgm");
-const btn = document.getElementById("music");
-const startAudio = () => {
-    if(audio.paused) { audio.play().catch(()=>{}); btn.classList.add('playing'); }
-};
-btn.onclick = (e) => {
+musicBtn.onclick = (e) => {
     e.stopPropagation();
-    if(audio.paused) startAudio();
-    else { audio.pause(); btn.classList.remove('playing'); }
+    if(audio.paused) { audio.play(); musicBtn.classList.add('playing'); }
+    else { audio.pause(); musicBtn.classList.remove('playing'); }
 };
-document.addEventListener("click", startAudio, {once: true});
-window.addEventListener('load', idlePreload);
 </script>
 </body>
 </html>
